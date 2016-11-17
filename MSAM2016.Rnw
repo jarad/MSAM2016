@@ -197,6 +197,7 @@ fg_logistic %>%
   print(include.rownames = FALSE)
 @
 
+\pause
 Results:
 
 <<fig.width=12>>=
@@ -222,6 +223,34 @@ ggplot(fg_logistic_by_kicker, aes(dist, probability)) +
 \end{frame}
 
 
+
+
+\begin{frame}
+\frametitle{Hierarchical model to borrow information across kickers}
+
+A hierarchical logistic regression model has the same initial structure:
+\[ 
+Y_{ak} \ind Ber(\pi_{ak}) \quad 
+\log\left( \frac{\pi_{ak}}{1-\pi_{ak}} \right) = X_{ak}^\top \beta_k.
+\]
+\pause 
+but then we assume a distribution for the $\beta_k$, i.e. 
+\[ 
+\beta_k \ind N(\mu,\Sigma).
+\]
+\pause
+The impact of this distribution is to learn about the 
+\begin{itemize}
+\item average effect of the explanatory variables across all kickers ($\mu$) \pause and 
+\item the variability from kicker to kicker around this average ($\Sigma$). 
+\end{itemize}
+\pause
+If a diagonal element of $\Sigma$ is estimated to be 
+\begin{itemize}
+\item small then kickers are similar and we borrow a lot of information across kickers
+\item large then kickers are dissimilar and we do not borrow much information.
+\end{itemize}
+\end{frame}
 
 
 % 
