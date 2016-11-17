@@ -1,0 +1,493 @@
+\documentclass[xcolor=dvipsnames,hyperref={pdfpagelabels=false}]{beamer}
+\setbeamertemplate{navigation symbols}{} 
+\definecolor{red}{rgb}{0.9, 0.1, 0.1}
+\usecolortheme[named=red]{structure} 
+%\pagestyle{empty}
+\usetheme{Madrid}
+\usepackage{lmodern}
+\usepackage{beamerthemesplit}
+\usepackage{subfigure}
+\usepackage{bm}
+\usepackage{mathabx}
+
+\graphicspath{{include/}}
+
+\title[Estimating Football Kicker Ability]{Using Information Underlying Missing Data to Improve Estimation of NFL Field Goal Kicker Accuracy}
+\author[Jarad Niemi]{Jarad Niemi with Dennis Lock, Dan Nettleton, and Casey Oliver}
+\date{\today}
+\institute{Iowa State University}
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame} 
+
+\section{Introduction}  	%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{frame}
+	\frametitle{Concept}
+	\begin{itemize}
+		\item {\bf Research Topic:} Estimation and inference in situations where response values are missing in a general linear model\\[0.5 cm]
+		\item {\bf Concept:} Improve estimation of fixed and random effects when missing values exist with a probability that is related to the linear predictor
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Motivating Project}
+	\begin{itemize}
+		\item A method of fairly and accurately assessing the ability of NFL field goal kickers utilizing information regarding the coaches decision whether or not to attempt the kick.\\[0.25 cm]
+		\begin{itemize}
+			\item The decision to attempt the field goal is most likely influenced by the probability of making the field goal.  \\[0.25 cm]
+			\item The better kickers will be asked to attempt the more difficult kicks. 
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Motivating Project: Kick Difficulty}
+\begin{figure}[!ht]
+\centering
+    \includegraphics[scale=0.33,clip]{HistsD.png}
+\caption{Distribution of Kicks from 2009 to 2011 by distance for 4 kickers}
+\end{figure}
+\end{frame}
+
+
+
+\section{IM Model}
+\subsection{Informative Missing Model}
+\begin{frame}
+	\frametitle{Informative Missing Model}
+\begin{itemize}
+\item For each subject $k=1,\ldots, K$ and $i = 1,\ldots, n_k$ let 
+	\begin{itemize}
+		\item $x_{ik}$ and $z_{ik}$ be vectors of covariate values associated with observation $i$ of subject $k$
+		\item $y_{ik}$ be the response value associated with observation $i$ of subject $k$
+		\item $m_{ik}$ equal 1 if $y_{ik}$, the response value for observation $i$ of subject $k$, is missing, and $m_{ik}=0$ if $y_{ik}$ is observed.  \\
+	\end{itemize}
+\end{itemize}
+\end{frame}
+\begin{frame}
+	\frametitle{Informative Missing Model}
+\begin{itemize}
+\item Suppose
+\begin{equation} \label{dataModel}
+y_{ik}|\theta_{ik} \stackrel{ind}{\sim} f(\theta_{ik}, \lambda), \nonumber
+\end{equation}
+where $f(\theta_{ik}, \lambda)$ is an exponential dispersion distribution with parameters $\theta_{ik}$ and $\lambda$. 
+\item Define linear predictor
+\begin{equation}\label{linPred}
+h(\theta_{ik})=x_{ik}'\beta + z_{ik}'v_k,  \nonumber
+\end{equation}
+where $h(\cdot)$ is a known link function, $\beta$ is an unknown parameter vector, and random effects vector $v_k\stackrel{ind}{\sim}N(0, \Sigma_v)$ for some unknown variance matrix $\Sigma_v$.  
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Informative Missing Model}
+\begin{itemize}
+\item Suppose
+\begin{equation}\label{missIndModel}
+m_{ik}|\pi_{ik} \stackrel{ind}{\sim}{\rm Bernoulli}(\pi_{ik}),  \nonumber
+\end{equation}
+\item Define linear predictor
+\begin{equation}\label{missLink}
+g(\pi_{ik}) = \omega_{ik}'\alpha, \nonumber
+\end{equation}
+\begin{equation}\label{omega}
+\omega_{ik}=(1,h(\theta_{ik}), w_{ik}')'=(1, x_{ik}'\beta + z_{ik}'v_k, w_{ik}')', \nonumber
+\end{equation}
+where $g(\cdot)$ is a known link function, $\alpha$ is an unknown parameter vector, and $w_{ik}$ is a vector of values for additional covariates that, with the linear predictor $h(\theta_{ik})=x_{ik}'\beta + z_{ik}'v_k$, could be associated with the probability of a missing response.
+
+\end{itemize}
+\end{frame}
+
+\subsection{Data}
+
+\begin{frame} \label{Slide}
+	\frametitle{Data: Observations}
+\begin{itemize}
+\item The dataset is a subset of plays from the 2009, 2010, and 2011 seasons, where a play was included if either a field goal was attempted or a field goal was not attempted when
+	\begin{enumerate}[(a)]
+	\item it was fourth down,
+	\item an attempted field goal would have been 76 yards or less,
+	\item a made field goal would not have decreased the offense's win probability as measured in Lock and Nettleton (2014).\\[0.25 cm]
+	\end{enumerate}
+\item Applying (a), (b), and (c) to our 3 years of plays resulted in $n = \sum_{k=1}^Kn_k=5706$ field goal opportunities with $\sum_{k=1}^K\sum_{i=1}^{n_k}(1-m_{ik})=2956$ kicks attempted from $K=41$ different kickers.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Data: Variables}
+\begin{itemize}
+\item The response variable $y_{ik}$ is 1 if a kick was made (or would have been made if $m_{ik} = 1$) and 0 if the kick was not made (or would not have been made if $m_{ik} = 1$).\\[0.25 cm]
+\item Covariates in $x_{ik}$ include an intercept and distance covariate ($d_{ik}$) as well as two indicators for precipitation (rain or snow) and two indicators for surface (synthetic or mix)
+\item Kicker specific covariates in $z_{ik}$ are the intercept and kick distance $d_{ik}$\\[0.25 cm]
+\item The additional probability of missing covariate in $w_{ik}$ in $\omega_{ik}$ are $\Delta_{ik}$ where
+$$\Delta_{ik} = {\rm WP}_{ik}(\mbox{Field Goal Made}) - {\rm WP}_{ik}(\mbox{Facing Fourth Down}),$$
+and the interaction between $\Delta_{ik}$ and $x_{ik}'\beta+z_{ik}'v_k$.
+\end{itemize}
+\end{frame}
+
+\subsection{Fitting the IM Model}
+\begin{frame} \label{APPLY}
+	\frametitle{Fitting the IM Model}
+\begin{itemize}
+\item For each subject $k=1,\ldots, K$ and $i = 1,\ldots, n_k$ let 
+	\begin{itemize}
+		\item $f(\theta_{ik}, \lambda)=Bernoulli(\theta_{ik})$,
+		\item $h(\cdot)=\Phi(\cdot)$,
+		\item $g(\cdot)=\Phi(\cdot)$,
+	\end{itemize}
+where $\Phi(\cdot)$ is the standard normal cumulative distribution function.\\[0.25 cm]
+
+\item The result is a mixed effects Probit model
+\begin{equation} \label{IMmodel}
+y_{ik}|\theta_{ik} \stackrel{ind}{\sim} {\rm Bernoulli}(\theta_{ik}), \ \Phi(\theta_{ik})=x_{ik}'\beta + z_{ik}'v_k, \ v_k\stackrel{ind}{\sim}N(0, \Sigma_v), \nonumber
+\end{equation}
+with informative missing aspect
+\begin{equation}\label{IMmissModel}
+m_{ik}|\pi_{ik} \stackrel{ind}{\sim}{\rm Bernoulli}(\pi_{ik}),\ \Phi(\pi_{ik})=\omega_{ik}'\alpha=(1, x_{ik}'\beta + z_{ik}'v_k, w_{ik}')\alpha. \nonumber
+\end{equation}
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+	\frametitle{Fitting the Model}
+\begin{itemize}
+\item We introduce, for each $i=1,\ldots, n_k$ and $k=1,\ldots, K$, a latent random variable $$\upsilon_{ik}=x'_{ik}\beta+z'_{ik}v_k+\epsilon_{ik},$$
+and connect $\upsilon_{ik}$ to $y_{ik}$ by the relationships
+$$y_{ik}=0 \Longleftrightarrow \upsilon_{ik}\leq 0 \mbox{ \ \ and \ \  } y_{ik}=1 \Longleftrightarrow \upsilon_{ik}>0,$$
+which leads to an equivalence with the mixed effect Probit model on slide \ref{APPLY}.  
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Fitting the Model}
+\begin{itemize}
+\item Similarly, for each $i=1,\ldots, n_k$ and $k=1,\ldots, K$, we define a latent random variable 
+\begin{equation}\label{w}
+\psi_{ik}= \omega_{ik}' \alpha + e_{ik} \nonumber
+\end{equation}
+and connect $\psi_{ik}$ to $m_{ik}$ by the relationships
+\[
+m_{ik}=0 \Longleftrightarrow \psi_{ik}\leq 0 \mbox{ \ \ and \ \  } m_{ik}=1 \Longleftrightarrow \psi_{ik}>0,
+\]
+which leads to an equivalence with the Probit missing model on slide \ref{APPLY}.  
+\item Since $\omega_{ik}$ includes the linear predictor $x_{ik}'\beta+z_{ik}'v_k$ as a component, both $\beta$ and $v_k$ are associated with both $\upsilon_{ik}$ and $\psi_{ik}$ (and thus with both $y_{ik}$ and $m_{ik}$).
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Fitting the Model: $\beta$ and $v_k$}
+\begin{itemize}
+\item Let $\phi(\cdot,\mu,\sigma)$ representing a normal distribution with mean $\mu$ and standard deviation $\sigma$, full conditionals for $\beta$ and $v_k$:
+{\scriptsize
+\begin{eqnarray}
+p(\beta|v,\alpha,\Sigma_v,m,\upsilon,\psi)  &\propto&  p(\beta) \nonumber \\  
+\label{indicators}
+&&\times \prod_{k=1}^{K}  \prod_{i=1}^{n_k} \left[ \phi(\upsilon_{ik};x_{ik}'\beta+z'_{ik}v_k,1)\times 1(m_{ik} = 0) +1(m_{ik}=1)\right]  \nonumber \\ 
+&&\times \prod_{k=1}^{K}  \prod_{i=1}^{n_k} \phi \left(\psi_{ik};\omega_{ik}'\alpha,1\right)  \nonumber
+\end{eqnarray}
+\begin{eqnarray}
+p(v_k|\alpha,\Sigma_v,m,\upsilon,\psi) & \propto & \phi(0,\Sigma_k) \nonumber \\  
+\label{indicators2}
+&& \times \prod_{i=1}^{n_k} \left[ \phi(\upsilon_{ik};x_{ik}'\beta+z'_{ik}v_k,1)\times 1(m_{ik} = 0) +1(m_{ik}=1)\right] \nonumber  \\ 
+&& \times \prod_{i=1}^{n_k} \phi \left(\psi_{ik};\omega_{ik}'\alpha,1\right)  \nonumber
+\end{eqnarray}
+}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Fitting the Model: Latent Variables $\upsilon$ and $\psi$}
+\begin{itemize}
+\item The full conditional distribution for each $\upsilon_{ik}$ is given by 
+{\footnotesize
+\begin{eqnarray*}
+\upsilon_{ik}|y_{ik}=1, m_{ik}=0,\beta,v_k & \sim & N(x_{ik}'\beta+z'_{ik}v_k,1)\text{, truncated at the left by 0}, \\  
+\upsilon_{ik}|y_{ik}=0,m_{ik}=0,\beta,v_k & \sim& N(x_{ik}'\beta+z'_{ik}v_k,1)\text{, truncated at the right by 0},\mbox{ and}\\ 
+\upsilon_{ik}|m_{ik}=1,\beta,v_k & \sim& N(x_{ik}'\beta+z'_{ik}v_k,1).
+\end{eqnarray*}
+\item Similarly, the full conditional distribution for each $\psi_{ik}$ is given by
+\begin{eqnarray*}
+\psi_{ik}|m_{ik}=1,\beta,v_k,\alpha & \sim & N\left( \omega_{ik}'\alpha,1\right), \text{truncated at the left by 0, and} \\ 
+\psi_{ik}|m_{ik}=0,\beta,v_k,\alpha & \sim & N\left(\omega_{ik}'\alpha,1\right), \text{truncated at the right by 0.}
+\end{eqnarray*}
+}
+
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Fitting the Model: $\Sigma_v$}
+\begin{itemize}
+\item We define the individual elements of $\Sigma_v$ by 
+\[
+\Sigma_v = \left[
+\begin{array}{cc}
+\sigma_{v1}^2& \sigma_{v12}\\
+\sigma_{v12}&\sigma_{v2}^2
+\end{array} \right],
+\]
+and define $r_{v12}=\frac{\sigma_{v12}}{\sigma_{v1}\sigma_{v2}}.$\\[0.25 cm]
+\item The full conditional distribution for each element of $\Sigma_v$ is 
+\begin{eqnarray*}
+p(\sigma_{v1}^2|v,\sigma_{v2}^2,\sigma_{v12})&\propto &p(\sigma_{v1}^2)\prod_{k=1}^{K}\phi(v_k;0,\Sigma_k) \\ 
+p(\sigma_{v2}^2|v,\sigma_{v1}^2,\sigma_{v12})&\propto &p(\sigma_{v2}^2)\prod_{k=1}^{K}\phi(v_k;0,\Sigma_k)  \\ 
+p(r_{v12}|v,\sigma_{v1}^2,\sigma_{v2}^2)&\propto &p(r_{v12})\prod_{k=1}^{K}\phi(v_k;0,\Sigma_k).
+\end{eqnarray*}
+
+\end{itemize}
+\end{frame}
+
+
+\section{Results}
+
+\begin{frame}
+	\frametitle{Results - $\beta$ Terms}
+\begin{table}[!ht]
+\begin{center}
+\begin{small}
+	\begin{tabular}{|l|c|c|c|}
+\hline
+	Variable & Parameter & Mean & 95\% Cred. Interval\\ \hline
+	 Intercept & $\beta_1$ & 3.557 & (3.304, 3.816) \\
+	 Distance  & $\beta_2$& -0.069 & (-0.075, -0.063) \\
+	 Snow indicator  & $\beta_3$&  -0.076 & (-0.511, 0.371) \\
+	 Rain indicator   & $\beta_4$& -0.132& (-0.296, 0.035) \\
+	  Synthetic surface indicator  & $\beta_5$ & 0.105 & (0.017, 0.196) \\
+		Mixed surface indicator & $\beta_6$&  0.039 & (-0.218, 0.299) \\
+\hline
+	\end{tabular}
+\caption{Posterior means and 95\% credible intervals for the $\beta$ parameters in $\Phi(\theta_{ik})$ and $\Phi(\pi_{ik})$}
+\label{coefficientPosteriors}
+\end{small}
+\end{center}
+\end{table}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Results - $\alpha$ Terms}
+\begin{table}[!ht]
+\begin{center}
+\begin{small}
+	\begin{tabular}{|l|c|c|c|}
+\hline
+	Variable & Parameter & Mean & 95\% Cred. Interval\\ \hline
+	 Intercept & $\alpha_1$ &0.607 & (0.488, 0.731) \\
+	 Linear predictor for kick success & $\alpha_2$ & -1.055 & (-1.188, -0.934) \\
+	 Change in win probability & $\alpha_3$ & -3.044 & (-4.278, -1.880) \\
+	Interaction & $\alpha_4$ &  -7.376 & (-9.478, -5.337) \\
+\hline
+	\end{tabular}
+\caption{Posterior means and 95\% credible intervals for the $\alpha$ parameters in $\Phi(\pi_{ik})$.}
+\label{coefficientPosteriors}
+\end{small}
+\end{center}
+\end{table}
+\end{frame}
+
+\begin{frame}
+\frametitle{Results - Probability of Missing}
+\begin{figure}[!ht]
+\begin{center}
+\includegraphics[scale = 0.3,trim = 0cm 0cm 0cm 0cm,clip]{Interaction.png}
+\end{center}
+\caption{Estimates of the probability of taking the kick as a function of the probability of making the kick for kicks of varying $\Delta_{ik}$.}
+\label{Interaction}
+\end{figure}
+\end{frame}
+
+\subsection{Model Comparison}
+
+\begin{frame}
+	\frametitle{Results - Model Comparison}
+\begin{itemize}
+	\item Models fit for comparison:
+	\begin{itemize}
+	\item A seperate logistic regression (SLR) approach, where we assume
+$$ y_{ik} \stackrel{ind}{\sim}  {\rm Bernoulli}(\mbox{logit}(x_{ik}'\beta_k)),$$
+with $\beta_k$ a vector of kicker-specific fixed effects. \\[0.25 cm]
+	\item A hierchical probit  regression (HPR) approach, where we assume
+\begin{equation} 
+y_{ik}|\theta_{ik} \stackrel{ind}{\sim} {\rm Bernoulli}(\theta_{ik}), \ \Phi(\theta_{ik})=x_{ik}'\beta + z_{ik}'v_k, \ v_k\stackrel{ind}{\sim}N(0, \Sigma_v), \nonumber
+\end{equation}
+defined the same as the Probit model for the IM method on slide \ref{APPLY}, but without accounting for missing values. \\[0.25 cm]
+	\item We use IM to designate the informative missing model fit from slide \ref{APPLY}.
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Results - Model Comparison}
+\begin{itemize}
+	\item Separating out the 2011-2012 season as a test set:
+\begin{center}
+	\begin{tabular}{c|c|c|c}
+	Measure & IM & HPR & SLR \\ \hline
+	MAE & 0.256 & 0.261 & 0.261\\
+	MSE & 0.136 & 0.139 & 0.142\\
+	\end{tabular}
+\end{center}
+\vspace{0.25 cm}
+	\item Standard error of kicker parameters (average SE across all kickers):
+\begin{center}
+	\begin{tabular}{c|c|c|c}
+	Parameter & IM & HPR & SLR \\ \hline
+	Intercept  & 0.223 & 0.324 & 0.590 \\
+	Distance Coefficient & 0.008 & 0.015 & 0.024\\
+	\end{tabular}
+\end{center}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Results - Model Comparison (Hartley and Janikowski)}
+\begin{figure}[!ht]
+\begin{center}
+\includegraphics[scale=.3,trim = 0cm 0cm 0cm 0cm,clip]{GHandSJ.png}
+\caption{Distribution of kick distances for Garret Hartley and Sebastian Janikowski.}
+\label{GHandSJ}
+\end{center}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Results - Model Comparison (Hartley and Janikowski)}
+\begin{figure}[!ht]
+\begin{center}
+\includegraphics[scale=.33,trim = 0cm 0cm 0cm 0cm,clip]{SLR.png}
+\caption{Probability of success for Hartley (red) and Janikowski (black) by distance on a grass surface in dry conditions using the SLR method.}
+\label{GHandSJ}
+\end{center}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Results - Model Comparison (Hartley and Janikowski)}
+\begin{figure}[!ht]
+\begin{center}
+\includegraphics[scale=.33,trim = 0cm 0cm 0cm 0cm,clip]{HPR.png}
+\caption{Probability of success for Hartley (red) and Janikowski (black) by distance on a grass surface in dry conditions using the HPR method.}
+\label{GHandSJ}
+\end{center}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Results - Model Comparison (Hartley and Janikowski)}
+\begin{figure}[!ht]
+\begin{center}
+\includegraphics[scale=.33,trim = 0cm 0cm 0cm 0cm,clip]{IM.png}
+\caption{Probability of success for Hartley (red) and Janikowski (black) by distance on a grass surface in dry conditions using the IM method.}
+\label{GHandSJ}
+\end{center}
+\end{figure}
+\end{frame}
+
+
+
+\subsection{Kicker Evaluation}
+
+\begin{frame}
+	\frametitle{Results: Kicker Evaluation}
+\begin{itemize}
+	\item {\bf Adjusted FG\%:} We use the following steps to calculate an adjusted FG\% for kicker $j$:\\[0.1 cm]
+	\begin{itemize}
+		\item  Estimate $\hat{\theta}_{ik}(j)$ using the IM model for all kicks attempted in 2011-2012 by all kickers as if they were attempted by kicker $j$.\\[0.25 cm]
+		\item Calculate $Total(j)=\sum_{k=1}^K\sum_{i=1}^{n_k}\hat{\theta}_{ik}(j)$ as the estimated number of successes kicker $k$ would have made if he was asked to kick all $n=\sum_{k=1}^K n_k$ attempts.
+		$$\mbox{Adjusted FG\%} = \frac{Total(j)}{n}$$
+	\end{itemize}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Results: Kicker Evaluation}
+\begin{table}
+\begin{center}
+	\begin{tabular}{|c|c|c|c|}
+\hline
+	Kicker & $P(y=1|d=25)$ & $P(y=1|d=50)$ & Adjusted FG\% \\ \hline
+	S. Janikowski & 0.99 (0.96,1.00) & 0.73 (0.67,0.79) & 0.89 (0.85,0.92)\\
+	G. Hartley & 0.95 (0.89,0.99) & 0.58 (0.44,0.71) & 0.80 (0.71,0.87)\\
+	Difference &  0.04 (-0.02,0.10)& 0.15 (0.02,0.30) & 0.09 (0.02,0.18) \\
+\hline
+	\end{tabular}
+\caption{Comparing the success probability for S. Janikowski and G. Hartley at a distance of 25 yards and 50 yards on a grass surface with no precipitation, and comparing the two on overall adjusted FG\% (posterior means with 95\% credible intervals in parentheses).}
+\label{OK}
+\end{center}
+\end{table}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Results: Kicker Evaluation}
+\begin{figure}[!ht]
+\centering
+    \includegraphics[scale = 0.4,trim = 0cm  0cm 0cm 1cm,clip]{ActualAdjusted15.png}
+\caption{Comparing raw FG\% to adjusted FG\% for all 41 qualifying kickers (dotted line indicates equality between raw and adjusted FG\%).}
+\label{FGP}
+\end{figure}
+\end{frame}
+
+\begin{frame}
+\begin{center}
+	\frametitle{Results: Kicker Evaluation}
+\begin{table}
+	\begin{tabular}{|c|c|c|}
+\hline
+	Kicker & Raw FG\% & Adjusted FG\% \\ \hline
+	S. Janikowski & 0.857 & 0.888 \\
+	N. Novack & 0.794 & 0.887\\
+	A. Vinatieri & 0.881 & 0.867 \\
+	N. Rackers & 0.859 & 0.865 \\
+	R. Bironas & 0.889 & 0.862 \\
+\hline
+	\end{tabular}
+	\caption{Top 5 Kickers from 2009 to 2012 by Adjusted FG \%}
+\end{table}
+\end{center}
+\end{frame}
+
+\section{Discussion}
+
+\begin{frame}
+	\frametitle{Future Work}
+\begin{itemize}
+	\item Future research can be dedicated to applying the purposed model to alternative situations where missing response values hold information about the predictor variable relationship.
+	\begin{itemize}
+		\item Alternative exponential dispersion distributions $f(\theta_{ik},\lambda)$\\[0.5 cm]
+	\end{itemize}
+	\item The methodology presented here assumes a completely observed set of predictor variables for every observation, adjustments would be necessary to account for situations with missing covariates as well.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Conclusions}
+\begin{itemize}
+	\item We introduced a new method to improve inference in a genarlized linear model when the response variable is missing with a probability related to the linear predictor. 
+	\item Applying the methodology to NFL field goal kickers improved estimation in specific cases and overall.
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Thank You}
+\begin{center}
+{\Large Thank You!}
+\end{center}
+\end{frame}
+
+
+
+\end{document}
