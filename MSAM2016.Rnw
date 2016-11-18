@@ -459,6 +459,17 @@ where
 
 
 
+\begin{frame}
+\frametitle{Data for informative missingness model}
+
+When considering what plays constitute an ``opportunity'' for a kicker, we 
+considered 4th down plays when an attempted field goal would have been from a distance of no more than 76 yards, and 
+\begin{itemize}
+\item a field goal was attempted or 
+\item a field goal was not attempted even though making the field goal would have increased the team's win probability.
+\end{itemize}
+
+\end{frame}
 
 
 \end{document}
