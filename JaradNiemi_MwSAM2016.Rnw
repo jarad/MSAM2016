@@ -532,8 +532,16 @@ Constructed a hierarchical informative missingness model \pause that
 \vspace{0.1in} \pause
 
 These slides are available at 
+\begin{itemize}
+\item \url{}
+\item or on my website \url{}.
+\end{itemize}
 
-\url{}
+\vspace{0.1in} \pause
+
+\begin{center}
+{\Huge Thank you!}
+\end{center}
 
 \end{frame}
 
