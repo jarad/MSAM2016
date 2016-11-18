@@ -1,4 +1,4 @@
-\documentclass{beamer}
+\documentclass[handout]{beamer}
 
 \usetheme{AnnArbor}
 \usecolortheme{beaver}
@@ -169,61 +169,70 @@ ggplot(fg_dist, aes(dist, p, size=n)) +
 
 
 \begin{frame}
-\frametitle{Logistic regression to account for explanatory variables}
+\frametitle{Probit regression to account for explanatory variables}
 
 \small
 
 For attempt $a$ for kicker $k$, let 
 \begin{itemize}
 \item $Y_{ak}$ be an indicator of success, i.e. 1 if successful and 0 otherwise, and \pause
-\item $X_{ak}$ be a vector of explanatory variables, e.g. distance, surface type, etc.
+\item $x_{ak}$ be a vector of explanatory variables, e.g. distance, surface type, etc.
 \end{itemize}
 
 \vspace{0.1in} \pause
 
-The logistic regression model for each kicker $k$ 
+A probit regression model for each kicker $k$ 
 \pause 
 assumes 
 \[ 
-Y_{ak} \ind Ber(\pi_{ak}) 
+Y_{ak} \ind Ber(\theta_{ak}) 
 \]
 \pause
-where $Y\sim Ber(\pi)$ indicates a Bernoulli distribution with 
+where $Y\sim Ber(\theta)$ indicates a Bernoulli distribution with 
 \[ 
-P(Y=1) = \pi \quad\mbox{and}\quad P(Y=0) = 1-\pi,
+P(Y=1) = \theta \quad\mbox{and}\quad P(Y=0) = 1-\theta,
 \]
 \pause
 and the probability is determined by
 \[
-\log\left( \frac{\pi_{ak}}{1-\pi_{ak}} \right) = X_{ak}^\top \beta_k 
+\theta_{ak}  = \Phi\left(\eta_{ak}\right) 
+\quad \eta_{ak} = x_{ak}^\top \beta_k 
 \]
 \pause
-e.g. (dropping the $k$ subscript) 
-$X_{a}^\top \beta = \beta_0 + \beta_1 \mbox{Distance} + \beta_2 \mbox{Synthetic}.$
+where $\Phi$ is the cumulative distribution function for a standrd normal. 
 
 \end{frame}
 
 
-<<grass_color_palette, cache=FALSE>>=
-gcp <- scale_color_manual(values = c("Grass" = "Seagreen", "Synthetic" = "Black"))
-@
-
 
 
 \begin{frame}
-\frametitle{Logistic regression analysis}
+\frametitle{Probit regression analysis}
+
+Explanatory variables included in this analysis:
+\begin{itemize}
+\item Distance \pause
+\item Field surface: indicator for synthetic (as opposed to grass) \pause
+\item Interaction between distance and field surface 
+\end{itemize}
+
+\pause 
+
+In the model (dropping the $k$ subscript):
+\[ \begin{array}{rl}
+\eta_a &= \beta_0 + \beta_1 \mbox{Distance}_a + \beta_2 \mbox{Synthetic}_a\phantom{+ \beta_3 \mbox{Distance}_a\cdot \mbox{Synthetic}_a} \\
+\eta_a &= \beta_0 + \beta_1 \mbox{Distance}_a + \beta_2 \mbox{Synthetic}_a+ \beta_3 \mbox{Distance}_a\cdot \mbox{Synthetic}_a
+\end{array} \]
+
+\pause
 
 Number of observations:
-% \begin{itemize}
-% \item Distance
-% \item Grass: yes or no (synthetic or mix)
-% \end{itemize}
 
 <<results='asis'>>=
-fg_logistic <- fg %>%
+fg_probit <- fg %>%
   mutate(Surface       = ifelse(surf == "Grass", "Grass", "Synthetic"))
 
-fg_logistic %>%
+fg_probit %>%
   group_by(kicker_hidden, Surface) %>%
   summarize(n = length(good)) %>%
   tidyr::spread(Surface,n) %>%
@@ -238,11 +247,11 @@ fg_logistic %>%
 
 
 \begin{frame}
-\frametitle{Logistic regression analysis}
+\frametitle{Probit regression analysis}
 
 \vspace{-0.05in}
 
-\[ \log\left( \frac{\pi_{ak}}{1-\pi_{ak}} \right) = \beta_0 + \beta_1 \mbox{Distance} + \beta_2 \mbox{Synthetic}\phantom{+ \beta_3 \mbox{Distance}\cdot \mbox{Synthetic}} \]
+\[ \eta_a = \beta_0 + \beta_1 \mbox{Distance}_a + \beta_2 \mbox{Synthetic}_a\phantom{+ \beta_3 \mbox{Distance}_a\cdot \mbox{Synthetic}_a} \]
 
 \vspace{0.1in}
 
@@ -254,17 +263,17 @@ glm_predictions <- function(d) {
   return(dd)
 }
 
-fg_dist2 <- fg_logistic %>%
+fg_dist2 <- fg_probit %>%
   group_by(kicker_hidden, dist, Surface) %>%
   summarize(n = length(good),
             made = sum(good)) %>%
   mutate(p = made/n) 
 
-fg_logistic_by_kicker <- fg_logistic %>%
+fg_probit_by_kicker <- fg_probit %>%
   group_by(kicker_hidden) %>%
   do(glm_predictions(.))
 
-ggplot(fg_logistic_by_kicker, aes(dist, probability, color=Surface)) +
+ggplot(fg_probit_by_kicker, aes(dist, probability, color=Surface)) +
   geom_point(data=fg_dist2, aes(dist, p, size=n)) +
   geom_line(aes(group=Surface)) +
   facet_grid(kicker_hidden ~.) +
@@ -277,27 +286,27 @@ ggplot(fg_logistic_by_kicker, aes(dist, probability, color=Surface)) +
 
 
 \begin{frame}
-\frametitle{Logistic regression analysis with an interaction}
+\frametitle{Probit regression analysis with an interaction}
 
 \vspace{-0.05in}
 
-\[ \log\left( \frac{\pi_{ak}}{1-\pi_{ak}} \right) = \beta_0 + \beta_1 \mbox{Distance} + \beta_2 \mbox{Synthetic} + \beta_3 \mbox{Distance}\cdot \mbox{Synthetic} \]
+\[ \eta_a = \beta_0 + \beta_1 \mbox{Distance}_a + \beta_2 \mbox{Synthetic}_a + \beta_3 \mbox{Distance}_a\cdot \mbox{Synthetic}_a \]
 
 \vspace{0.1in} \pause
 
 <<glm2, fig.width=10, out.width="\\textwidth", dependson="glm">>=
 glm2_predictions <- function(d) {
-  m <- glm(good ~ dist*Surface, data=d, family="binomial")
+  m <- glm(good ~ dist*Surface, data=d, family=binomial(link="probit"))
   dd <- expand.grid(dist=17:80, Surface=c("Grass","Synthetic"))
   dd$probability <- as.numeric(predict(m, dd, type="response"))
   return(dd)
 }
 
-fg_logistic_by_kicker2 <- fg_logistic %>%
+fg_probit_by_kicker2 <- fg_probit %>%
   group_by(kicker_hidden) %>%
   do(glm2_predictions(.))
 
-ggplot(fg_logistic_by_kicker2, aes(dist, probability, color=Surface)) +
+ggplot(fg_probit_by_kicker2, aes(dist, probability, color=Surface)) +
   geom_point(data=fg_dist2, aes(dist, p, size=n)) +
   geom_line(aes(group=Surface)) +
   facet_grid(kicker_hidden ~.) +
@@ -315,10 +324,10 @@ ggplot(fg_logistic_by_kicker2, aes(dist, probability, color=Surface)) +
 
 \small
 
-A hierarchical logistic regression model has the same initial structure:
+A hierarchical probit regression model has the same initial structure:
 \[ 
-Y_{ak} \ind Ber(\pi_{ak}) \quad 
-\log\left( \frac{\pi_{ak}}{1-\pi_{ak}} \right) = X_{ak}^\top \beta_k.
+Y_{ak} \ind Ber(\theta_{ak}) \quad 
+ \theta_{ak}  = \Phi\left(x_{ak}^\top \beta_k\right).
 \]
 \pause 
 but then we assume a distribution for the $\beta_k$, e.g. 
@@ -341,7 +350,7 @@ If diagonal elements of $\Sigma$ are estimated to be
 
 
 \begin{frame}
-\frametitle{Hierarchical logistic regression model}
+\frametitle{Hierarchical probit regression model}
 <<hierarchical_model, warning = FALSE>>=
 fg <- NFLKicker::FGdata %>%
   mutate(Surface       = ifelse(surf == "Grass", "Grass", "Synthetic"),
@@ -349,7 +358,7 @@ fg <- NFLKicker::FGdata %>%
 
 m_glmer <- glmer(good ~ (Surface*scaled_dist|fkicker), 
            data = fg, 
-           family = "binomial")
+           family = binomial(link="probit"))
 @
 
 
@@ -372,6 +381,80 @@ ggplot(p_glmer, aes(dist, probability, color=Surface)) +
   ylim(0,1) +
   scale_color_manual(values = c("Grass" = "seagreen", "Synthetic" = "Black"))
 @
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Modeling attempts (or non-attempts)}
+
+\small
+
+For opportunity $i$ for kicker $k$, let 
+\begin{itemize}
+\item $A_{ik}$ be an indicator of attempt, i.e. 1 if a kick was attempted and 0 otherwise, and 
+\item $w_{ik}$ be a vector of explanatory variables.
+\end{itemize}
+
+\pause
+A probit regression model for each kicker $k$ assumes 
+\[ 
+M_{ik} \ind Ber(\pi_{ik}) \quad \pi_{ik} = \Phi(\zeta_{ik}) \quad \zeta_{ik} = w_{ik}^\top \alpha_k.
+\]
+
+\pause
+Two important explanatory variables for determining whether to take a kick 
+\pause are 
+\begin{itemize}
+\item the probability of making the kick \pause and 
+\item will making this kick increase my chances of winning.
+\end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+\frametitle{Explanatory variables for kick attempts}
+
+We already ``know'' the probability of making attempt $i$ for kicker $k$\pause, 
+its $\theta_{ik}$. 
+
+\vspace{0.1in} \pause
+
+At any instant in the game, we can calculate a team's win probability using the
+method of Lock and Nettleton (2014). \pause
+We use  
+\[ 
+\Delta_{ik} = WP_{ik}(\mbox{Successful kick}) - WP_{ik}(\mbox{Current}).
+\]
+
+\vspace{0.1in} \pause
+
+Final set of explanatory variables 
+\[
+\zeta_{ik} = \alpha_0 + \alpha_1 \Phi^{-1}(\theta_{ik}) + \alpha_2 \Delta_{ik} + \alpha_3 \Phi^{-1}(\theta_{ik}) \Delta_{ik}.
+\]
+
+\end{frame}
+
+
+
+
+\begin{frame}
+\frametitle{Informative missingness model}
+
+The full model is 
+\[ \begin{array}{rlrlrl}
+Y_{ak} &\ind Ber(\theta_{ak}) & \theta_{ak}  &= \Phi\left(     x_{ak}^\top \beta_k \right) & \beta_k \ind N(\mu,\Sigma) \\
+M_{ik} &\ind Ber(\pi_{ik})    & \pi_{ik}     &= \Phi\left(\omega_{ik}^\top \alpha\phantom{_k}  \right) \\
+\omega_{ik} &= (w_{ik}, w_{ik}\Phi^{-1}(\theta_{ik}))
+\end{array} \]
+\pause
+where 
+\begin{itemize}
+\item $x_{ak}$ is a set of explanatory variables that affect the probability of making a kick \pause and
+\item $w_{ik}$ is a set of explanatory variables that affect the probability of taking a kick. 
+\end{itemize}
 \end{frame}
 
 
