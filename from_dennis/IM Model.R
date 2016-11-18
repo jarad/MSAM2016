@@ -38,7 +38,7 @@ D = g$pDiff
 
 
 
-		#Conjugate party
+#Conjugate party
 sims = 1100
 pb <- txtProgressBar(min = 0, max = sims, style = 3)
 #Ignore priors for now
@@ -66,93 +66,93 @@ Y = rep(0,length(M))
 i = 2
 while(i<= sims)
 {
-B = as.matrix(B,ncol = 1)
-		#Hyper Prior updates
-	#Mean term update
-#Sigt = Sigged(B[1:(2*Bp)],m)
-#sig = riwish(Bp+3,diag(2)+Sigt)
-#sigi = solve(sig)
-sig = matrix(c((1/s1)^2,r*(1/s1)*(1/s2),r*(1/s1)*(1/s2),(1/s2)^2),nrow = 2)
-sigi = solve(sig)
-V0 = diag(2)*100
-Vm = solve(solve(V0)+Bp*sigi)
-m = c(rmnorm(1,Vm%*%(Bp*sigi%*%c(mean(B[1:Bp]),mean(B[(Bp+1):(Bp*2)]))),Vm))
-
-	#Variance terms updates
-#s1
-init = Hypelike(B,m,s1,s2,r)
-s1 = exp(rnorm(1,log(sdraws[i-1,1]),.5))
-finish = Hypelike(B,m,s1,s2,r)
-accept = exp(finish - init)
-if(accept < runif(1,0,1))
-{
-s1 = sdraws[i-1,1]
-k1 = k1+ 1
-}
-#s2
-init = Hypelike(B,m,s1,s2,r)
-s2 = exp(rnorm(1,log(sdraws[i-1,2]),.5))
-finish = Hypelike(B,m,s1,s2,r)
-accept = exp(finish - init)
-if(accept < runif(1,0,1))
-{
-s2 = sdraws[i-1,2]
-k2 = k2 + 1
-}
-
-#r
-init = Hypelike(B,m,s1,s2,r)
-r = rtruncnorm(1,a=-0.999,b=0.999,mean=rdraws[i-1],sd = 0.5)
-finish = Hypelike(B,m,s1,s2,r)
-accept = exp(finish - init)
-if(accept < runif(1,0,1))
-{
-r = rdraws[i-1]
-k3 = k3 + 1
-}
-
-	#GIBBS B and Y
-ZK = (Z-a[1]-a[2]*D)/(a[3]+a[4]*D)
-XM = rbind(X,X2)
-XX = t(XM)%*%XM
-
-V = diag(c(rep((1/s1)^2,Bp),rep((1/s2)^2,Bp)))
-for(l in 1:(Bp)){
-V[l,Bp+l] = r*(1/s1)*(1/s2)
-V[Bp+l,l] = r*(1/s1)*(1/s2)
-}
-V = adiag(V,diag(4)*100)
-Vi = solve(V)
-B = as.matrix(B,ncol = 1)
-XB = X%*%B
-for(l in 1:length(M))
-{
-	if(M[l] == 1){Y[l] = rtruncnorm(n=1,a = 0,b = Inf,mean=XB[l])}
-	if(M[l] == 0){Y[l] = rtruncnorm(n=1,a = -Inf,b = 0,mean=XB[l])}
-}
-YZ = c(Y,ZK)
-#B = t(rmnorm(1,solve(XX)%*%(t(XM)%*%YZ),solve(XX)))
-B = c(rmnorm(1,solve(XX+Vi)%*%(Vi%*%c(rep(m[1],Bp),rep(m[2],Bp),0,0,0,0)+t(XM)%*%YZ),solve(XX+Vi)))
-B = as.matrix(B,ncol = 1)
-
-	#GIBBS a
-Ya = X2%*%B
-Xa = as.matrix(data.frame("I" = rep(1,length(K)),"D" = D,"P" = Ya,"DP" = D*Ya))
-XXZ = solve(diag(4)/100+t(Xa)%*%Xa)
-XaB = Xa%*%a
-for(l in 1:length(K))
-{
-	if(K[l] == 1){Z[l] = rtruncnorm(n=1,a = 0,b = Inf,mean=XaB[l])}
-	if(K[l] == 0){Z[l] = rtruncnorm(n=1,a = -Inf,b = 0,mean=XaB[l])}
-}
-a = c(rmnorm(1,XXZ%*%(t(Xa)%*%Z),XXZ))
-Bdraws[i,] = B
-adraws[i,] = a
-sdraws[i,] = c(s1,s2)
-mdraws[i,] = m
-rdraws[i] = r
-setTxtProgressBar(pb, i)
-i = i + 1
+  B = as.matrix(B,ncol = 1)
+  #Hyper Prior updates
+  #Mean term update
+  #Sigt = Sigged(B[1:(2*Bp)],m)
+  #sig = riwish(Bp+3,diag(2)+Sigt)
+  #sigi = solve(sig)
+  sig = matrix(c((1/s1)^2,r*(1/s1)*(1/s2),r*(1/s1)*(1/s2),(1/s2)^2),nrow = 2)
+  sigi = solve(sig)
+  V0 = diag(2)*100
+  Vm = solve(solve(V0)+Bp*sigi)
+  m = c(rmnorm(1,Vm%*%(Bp*sigi%*%c(mean(B[1:Bp]),mean(B[(Bp+1):(Bp*2)]))),Vm))
+  
+  #Variance terms updates
+  #s1
+  init = Hypelike(B,m,s1,s2,r)
+  s1 = exp(rnorm(1,log(sdraws[i-1,1]),.5))
+  finish = Hypelike(B,m,s1,s2,r)
+  accept = exp(finish - init)
+  if(accept < runif(1,0,1))
+  {
+    s1 = sdraws[i-1,1]
+    k1 = k1+ 1
+  }
+  #s2
+  init = Hypelike(B,m,s1,s2,r)
+  s2 = exp(rnorm(1,log(sdraws[i-1,2]),.5))
+  finish = Hypelike(B,m,s1,s2,r)
+  accept = exp(finish - init)
+  if(accept < runif(1,0,1))
+  {
+    s2 = sdraws[i-1,2]
+    k2 = k2 + 1
+  }
+  
+  #r
+  init = Hypelike(B,m,s1,s2,r)
+  r = rtruncnorm(1,a=-0.999,b=0.999,mean=rdraws[i-1],sd = 0.5)
+  finish = Hypelike(B,m,s1,s2,r)
+  accept = exp(finish - init)
+  if(accept < runif(1,0,1))
+  {
+    r = rdraws[i-1]
+    k3 = k3 + 1
+  }
+  
+  #GIBBS B and Y
+  ZK = (Z-a[1]-a[2]*D)/(a[3]+a[4]*D)
+  XM = rbind(X,X2)
+  XX = t(XM)%*%XM
+  
+  V = diag(c(rep((1/s1)^2,Bp),rep((1/s2)^2,Bp)))
+  for(l in 1:(Bp)){
+    V[l,Bp+l] = r*(1/s1)*(1/s2)
+    V[Bp+l,l] = r*(1/s1)*(1/s2)
+  }
+  V = adiag(V,diag(4)*100)
+  Vi = solve(V)
+  B = as.matrix(B,ncol = 1)
+  XB = X%*%B
+  for(l in 1:length(M))
+  {
+    if(M[l] == 1){Y[l] = rtruncnorm(n=1,a = 0,b = Inf,mean=XB[l])}
+    if(M[l] == 0){Y[l] = rtruncnorm(n=1,a = -Inf,b = 0,mean=XB[l])}
+  }
+  YZ = c(Y,ZK)
+  #B = t(rmnorm(1,solve(XX)%*%(t(XM)%*%YZ),solve(XX)))
+  B = c(rmnorm(1,solve(XX+Vi)%*%(Vi%*%c(rep(m[1],Bp),rep(m[2],Bp),0,0,0,0)+t(XM)%*%YZ),solve(XX+Vi)))
+  B = as.matrix(B,ncol = 1)
+  
+  #GIBBS a
+  Ya = X2%*%B
+  Xa = as.matrix(data.frame("I" = rep(1,length(K)),"D" = D,"P" = Ya,"DP" = D*Ya))
+  XXZ = solve(diag(4)/100+t(Xa)%*%Xa)
+  XaB = Xa%*%a
+  for(l in 1:length(K))
+  {
+    if(K[l] == 1){Z[l] = rtruncnorm(n=1,a = 0,b = Inf,mean=XaB[l])}
+    if(K[l] == 0){Z[l] = rtruncnorm(n=1,a = -Inf,b = 0,mean=XaB[l])}
+  }
+  a = c(rmnorm(1,XXZ%*%(t(Xa)%*%Z),XXZ))
+  Bdraws[i,] = B
+  adraws[i,] = a
+  sdraws[i,] = c(s1,s2)
+  mdraws[i,] = m
+  rdraws[i] = r
+  setTxtProgressBar(pb, i)
+  i = i + 1
 }
 
 #save.image("IM Draws.Rdata")
