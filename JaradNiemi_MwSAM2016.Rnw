@@ -67,19 +67,21 @@ set.seed(1)
 \begin{frame}
 
 Let's compare two field goal kickers and their proportion of field goals made 
-for the 2000-2011 seasons:
+for the 2009-2011 seasons
 
 \pause
 
 \frametitle{Raw statistics}
-<<raw_statistics, results="asis">>=
+<<data, results="asis">>=
 kicker_names <- NFLKicker::kicker_names
 kicker_names$kicker_hidden <- c("Kicker 2","Kicker 1")
 
 fg <- NFLKicker::FGdata %>%
+  filter(seas >= 2009, gid >= 2388) %>%
   right_join(kicker_names, by = "fkicker")
-  
+@
 
+<<raw_statistics, dependson="data", results="asis">>=
 fg_raw <- fg %>%
   group_by(kicker_hidden) %>%
   summarize(n = length(good),
@@ -93,7 +95,7 @@ fg_table <- fg_raw %>%
          `Proportion made` = p)
 @
 
-<<proportion_table, results="asis">>=
+<<proportion_table, dependson="raw_statistics", results="asis">>=
 fg_table %>%
   dplyr::select(`Kicker`, `Proportion made`) %>%
   xtable(digits = c(1,NA,2)) %>%
@@ -115,34 +117,31 @@ fg_table %>%
 \end{frame}
 
 
-\begin{frame}
-\frametitle{Posterior distribution for true probability}
-
-<<posterior, dependson="raw_statistics", fig.width=8>>=
-create_posterior <- function(d) {
-  data.frame(probability = seq(0.6,1, length=101)) %>%
-    mutate(density = dbeta(probability, d$made+.5, d$n-d$made+.5))
-}
-
-posterior <- fg_raw %>%
-  group_by(kicker_hidden) %>%
-  do(create_posterior(.))
-
-ggplot(posterior, aes(probability, density, color=kicker_hidden, group=kicker_hidden)) +
-  geom_line() +
-  theme_bw() + 
-  labs("Probability of making a field goal", ylab="Posterior density", color="Kicker")
-@
-\end{frame}
+%' \begin{frame}
+%' \frametitle{Posterior distribution for true probability}
+%' 
+%' <<posterior, dependson="raw_statistics", fig.width=8>>=
+%' create_posterior <- function(d) {
+%'   data.frame(probability = seq(0.6,1, length=101)) %>%
+%'     mutate(density = dbeta(probability, d$made+.5, d$n-d$made+.5))
+%' }
+%' 
+%' posterior <- fg_raw %>%
+%'   group_by(kicker_hidden) %>%
+%'   do(create_posterior(.))
+%' 
+%' ggplot(posterior, aes(probability, density, color=kicker_hidden, group=kicker_hidden)) +
+%'   geom_line() +
+%'   theme_bw() + 
+%'   labs("Probability of making a field goal", ylab="Posterior density", color="Kicker")
+%' @
+%' \end{frame}
 
 
 \begin{frame}
 \frametitle{Taking distance into account}
 
-<<fg_dist, fig.width=10, out.width="\\textwidth">>=
-fg <- NFLKicker::FGdata %>%
-  right_join(kicker_names, by = "fkicker")
-
+<<fg_dist, dependson="data", fig.width=10, out.width="\\textwidth">>=
 fg_dist <- fg %>%
   group_by(kicker_hidden, dist) %>%
   summarize(n = length(good),
@@ -226,7 +225,7 @@ In the model (dropping the $k$ subscript):
 
 Number of observations:
 
-<<results='asis'>>=
+<<number_of_observations, dependson="data", results='asis'>>=
 fg_probit <- fg %>%
   mutate(Surface       = ifelse(surf == "Grass", "Grass", "Synthetic"))
 
@@ -253,7 +252,7 @@ fg_probit %>%
 
 \vspace{0.1in}
 
-<<glm, fig.width=10, out.width="\\textwidth">>=
+<<glm, dependson="number_of_observations", fig.width=10, out.width="\\textwidth">>=
 glm_predictions <- function(d) {
   m <- glm(good ~ dist+Surface, data=d, family="binomial")
   dd <- expand.grid(dist=17:80, Surface=c("Grass","Synthetic"))
@@ -348,14 +347,14 @@ If diagonal elements of $\Sigma$ are estimated to be
 
 
 \begin{frame}
-\frametitle{Hierarchical probit regression model}
+\frametitle{Hierarchical probit regression model with interaction}
 <<hierarchical_model, warning = FALSE>>=
-fg <- NFLKicker::FGdata %>%
+fg2 <- NFLKicker::FGdata %>%
   mutate(Surface       = ifelse(surf == "Grass", "Grass", "Synthetic"),
          scaled_dist = as.numeric(scale(dist, center=36, scale = 10)))
 
 m_glmer <- glmer(good ~ (Surface*scaled_dist|fkicker), 
-           data = fg, 
+           data = fg2, 
            family = binomial(link="probit"))
 @
 
@@ -388,7 +387,7 @@ ggplot(p_glmer, aes(dist, probability, color=Surface)) +
 
 \small
 
-For opportunity $i$ for kicker $k$, let 
+For \alert{opportunity} $i$ for kicker $k$, \pause let 
 \begin{itemize}
 \item $A_{ik}$ be an indicator of attempt, i.e. 1 if a kick was attempted and 0 otherwise, and 
 \item $w_{ik}$ be a vector of explanatory variables.
@@ -444,8 +443,8 @@ Final set of explanatory variables
 The full model is 
 \[ \begin{array}{rlrlrl}
 Y_{ak} &\ind Ber(\theta_{ak}) & \theta_{ak}  &= \Phi\left(     x_{ak}^\top \beta_k \right) & \beta_k \ind N(\mu,\Sigma) \\
-A_{ik} &\ind Ber(\pi_{ik})    & \pi_{ik}     &= \Phi\left(\omega_{ik}^\top \alpha\phantom{_k}  \right) \\
-\omega_{ik} &= (w_{ik}, w_{ik}\Phi^{-1}(\theta_{ik}))
+A_{ik} &\ind Ber(\pi_{ik})    & \pi_{ik}     &= \Phi\left(\omega_{ik}^\top \alpha\phantom{_k}  \right) \pause \\ \\
+\omega_{ik} &\multicolumn{5}{l}{= (w_{ik}, w_{ik}\Phi^{-1}(\theta_{ik})) = (w_{ik}, w_{ik}x_{ak}^\top \beta_k)}
 \end{array} \]
 \pause
 where 
@@ -473,7 +472,7 @@ considered 4th down plays when an attempted field goal would have been from a di
 
 \begin{frame}
 \frametitle{Informative missingness analysis}
-<<informative_missing_data>>=
+<<informative_missing_data, dependson="data">>=
 library(dplyr)
 
 d = suppressWarnings(readr::read_csv("from_dennis/BdrawsIM.csv")[101:10100,-1])
@@ -504,9 +503,16 @@ p_d = d %>%
   left_join(kicker_names)
 @
 
-<<informative_missing_plot, dependson="informative_missing_data", fig.width=10, out.width="\\textwidth">>=
+<<informative_missing_plot, dependson=c("glm","informative_missing_data"), fig.width=10, out.width="\\textwidth">>=
+# fg_dist3 <- fg_probit %>%
+#   filter(seas >= 2009, gid >= 2388) %>%
+#   group_by(kicker_hidden, dist, Surface) %>%
+#   summarize(n = length(good),
+#             made = sum(good)) %>%
+#   mutate(p = made/n) 
+
 ggplot(p_d, aes(dist, probability, color=Surface)) +
-#  geom_point(data=fg_dist2, aes(dist, p, size=n)) +
+  geom_point(data=fg_dist2, aes(dist, p, size=n)) +
   geom_line(aes(group=Surface)) +
   facet_grid(kicker_hidden ~.) +
   theme_bw() +
@@ -514,6 +520,23 @@ ggplot(p_d, aes(dist, probability, color=Surface)) +
   ylim(0,1) +
   scale_color_manual(values = c("Grass" = "seagreen", "Synthetic" = "Black"))
 @
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Kicker comparison}
+
+<<kicker_comparison, dependson="informative_missing_data", fig.width=10, out.width="\\textwidth">>=
+ggplot(p_d, aes(dist, probability, color=Surface, group=kicker_hidden, linetype=kicker_hidden)) +
+  geom_line() +
+  facet_grid(Surface ~.) +
+  theme_bw() +
+  labs(x="Distance (yards)",y="Probability of making the kick", size="Number of\nattempts",
+       linetype = "Kicker") +
+  ylim(0,1) +
+  scale_color_manual(values = c("Grass" = "seagreen", "Synthetic" = "Black"))
+@
+
 \end{frame}
 
 
@@ -548,13 +571,13 @@ These slides are available at
 
 \begin{frame}
 \frametitle{Kicker name reveal}
-<<name_reveal, dependson="informative_missing_data", fig.width=10, out.width="\\textwidth">>=
-ggplot(p_d, aes(dist, probability, color=Surface)) +
-#  geom_point(data=fg_dist2, aes(dist, p, size=n)) +
-  geom_line(aes(group=Surface)) +
-  facet_grid(kicker_name ~.) +
+<<name_reveal, dependson=c("glm","informative_missing_data"), fig.width=10, out.width="\\textwidth">>=
+ggplot(p_d, aes(dist, probability, color=Surface, group=kicker_name, linetype=kicker_name)) +
+  geom_line() +
+  facet_grid(Surface ~.) +
   theme_bw() +
-  labs(x="Distance (yards)",y="Probability of making the kick", size="Number of\nattempts") +
+  labs(x="Distance (yards)",y="Probability of making the kick", size="Number of\nattempts",
+       linetype = "Kicker") +
   ylim(0,1) +
   scale_color_manual(values = c("Grass" = "seagreen", "Synthetic" = "Black"))
 @
