@@ -1,4 +1,4 @@
-\documentclass[handout]{beamer}
+\documentclass{beamer}
 
 \usetheme{AnnArbor}
 \usecolortheme{beaver}
@@ -397,7 +397,7 @@ For opportunity $i$ for kicker $k$, let
 \pause
 A probit regression model for each kicker $k$ assumes 
 \[ 
-M_{ik} \ind Ber(\pi_{ik}) \quad \pi_{ik} = \Phi(\zeta_{ik}) \quad \zeta_{ik} = w_{ik}^\top \alpha_k.
+A_{ik} \ind Ber(\pi_{ik}) \quad \pi_{ik} = \Phi(\zeta_{ik}) \quad \zeta_{ik} = w_{ik}^\top \alpha_k.
 \]
 
 \pause
@@ -444,7 +444,7 @@ Final set of explanatory variables
 The full model is 
 \[ \begin{array}{rlrlrl}
 Y_{ak} &\ind Ber(\theta_{ak}) & \theta_{ak}  &= \Phi\left(     x_{ak}^\top \beta_k \right) & \beta_k \ind N(\mu,\Sigma) \\
-M_{ik} &\ind Ber(\pi_{ik})    & \pi_{ik}     &= \Phi\left(\omega_{ik}^\top \alpha\phantom{_k}  \right) \\
+A_{ik} &\ind Ber(\pi_{ik})    & \pi_{ik}     &= \Phi\left(\omega_{ik}^\top \alpha\phantom{_k}  \right) \\
 \omega_{ik} &= (w_{ik}, w_{ik}\Phi^{-1}(\theta_{ik}))
 \end{array} \]
 \pause
@@ -473,10 +473,10 @@ considered 4th down plays when an attempted field goal would have been from a di
 
 \begin{frame}
 \frametitle{Informative missingness analysis}
-<<informative_missing_data, fig.width=10, out.width="\\textwidth">>=
+<<informative_missing_data>>=
 library(dplyr)
 
-d = readr::read_csv("from_dennis/BdrawsIM.csv")[101:10100,-1]
+d = suppressWarnings(readr::read_csv("from_dennis/BdrawsIM.csv")[101:10100,-1])
 
 hartley    = d[,11+c(0,41)]
 names(hartley)    = c("intercept","distance")
