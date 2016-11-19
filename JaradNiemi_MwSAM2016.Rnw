@@ -557,7 +557,7 @@ Constructed a hierarchical informative missingness model \pause that
 These slides are available at 
 \begin{itemize}
 \item {\scriptsize \url{https://github.com/jarad/MwSAM2016/raw/master/JaradNiemi_MwSAM2016.pdf}}
-\item or on my website {\scriptsize \url{http://www.jarad.me/research/presentations.html}}.
+\item or on my website {\scriptsize \url{http://www.jarad.me/presentations.html}}.
 \end{itemize}
 
 \vspace{0.1in} \pause
