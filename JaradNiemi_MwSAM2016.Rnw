@@ -504,7 +504,7 @@ p_d = d %>%
   left_join(kicker_names)
 @
 
-<<informative_missing_plot, dependson="informative_missing_data">>=
+<<informative_missing_plot, dependson="informative_missing_data", fig.width=10, out.width="\\textwidth">>=
 ggplot(p_d, aes(dist, probability, color=Surface)) +
 #  geom_point(data=fg_dist2, aes(dist, p, size=n)) +
   geom_line(aes(group=Surface)) +
@@ -533,8 +533,8 @@ Constructed a hierarchical informative missingness model \pause that
 
 These slides are available at 
 \begin{itemize}
-\item \url{}
-\item or on my website \url{}.
+\item {\scriptsize \url{https://github.com/jarad/MwSAM2016/raw/master/JaradNiemi_MwSAM2016.pdf}}
+\item or on my website {\scriptsize \url{http://www.jarad.me/research/presentations.html}}.
 \end{itemize}
 
 \vspace{0.1in} \pause
